@@ -169,6 +169,28 @@ def inject_dark_theme():
 
         hr { border-color: var(--border) !important; }
 
+        /* Sidebar always visible */
+        section[data-testid="stSidebar"] {
+            min-width: 280px !important;
+            max-width: 280px !important;
+        }
+
+        /* Sidebar toggle button */
+        button[aria-label="Close sidebar"],
+        button[aria-label="Open sidebar"],
+        [data-testid="stSidebarCollapseButton"] button,
+        [data-testid="stSidebarExpandButton"] button {
+            background-color: var(--bg-tertiary) !important;
+            color: var(--text-primary) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 6px !important;
+            width: 32px !important;
+            height: 32px !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            display: flex !important;
+        }
+
         #MainMenu { visibility: hidden; }
         footer { visibility: hidden; }
         header { visibility: hidden; }
