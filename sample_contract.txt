@@ -1,0 +1,68 @@
+KONTRAK PERJANJIAN KERJA SAMA
+NOMOR: 001/PRSK/2026
+
+PADA HARI INI, Tanggal 15 Agustus 2026, telah dibuat dan ditandatangani Perjanjian Kerja Sama antara:
+
+1. PT Teknologi Maju Indonesia ("PIHAK PERTAMA")
+   - Alamat: Jl. Sudirman No. 123, Jakarta Selatan, DKI Jakarta
+   - Direktur: Budi Santoso
+   - NPWP: 12.345.678.9-012.000
+
+2. PT Digital Solusi Nusantara ("PIHAK KEDUA")
+   - Alamat: Jl. Gatot Subroto No. 456, Jakarta Pusat, DKI Jakarta
+   - Direktur: Ani Wijaya
+   - NPWP: 98.765.432.1-098.000
+
+BAHWA PIHAK PERTAMA dan PIHAK KEDUA secara bersama-sama disebut sebagai "PARA PIHAK" dan secara sendiri-sendiri disebut sebagai "PIHAK".
+
+PASAL 1 - MAKSUD DAN TUJUAN
+1.1 Perjanjian ini bertujuan untuk mengatur kerja sama antara Para Pihak dalam pengembangan sistem manajemen data berbasis artificial intelligence.
+1.2 PIHAK PERTAMA akan menyediakan infrastruktur server dan data training.
+1.3 PIHAK KEDUA akan mengembangkan model machine learning dan deployment system.
+
+PASAL 2 - JANGKA WAKTU
+2.1 Perjanjian ini berlaku selama 12 (dua belas) bulan sejak tanggal penandatanganan.
+2.2 Perjanjian dapat diperpanjang dengan kesepakatan tertulis dari Para Pihak.
+
+PASAL 3 - NILAI KONTRAK
+3.1 Total nilai kontrak adalah Rp 2.500.000.000 (dua miliar lima ratus juta Rupiah).
+3.2 Pembayaran dilakukan dalam 3 (tiga) termin:
+   - Termin 1: Rp 750.000.000 (30%) - saat kontrak ditandatangani
+   - Termin 2: Rp 1.000.000.000 (40%) - saat milestone pertama tercapai
+   - Termin 3: Rp 750.000.000 (30%) - saat proyek selesai dan diserahterimakan
+
+PASAL 4 - KERAHASIAAN
+4.1 Para Pihak wajib menjaga kerahasiaan semua informasi yang diperoleh selama pelaksanaan kerja sama.
+4.2 Kewajiban kerahasiaan berlaku selama 5 (lima) tahun setelah berakhirnya perjanjian ini.
+4.3 Pelanggaran terhadap kewajiban kerahasiaan dikenakan denda sebesar 10% dari total nilai kontrak.
+
+PASAL 5 - HAK INTELEKTUAL
+5.1 Hasil pengembangan yang dilakukan oleh PIHAK KEDUA menjadi hak bersama Para Pihak.
+5.2 PIHAK KEDUA memiliki hak untuk menggunakan teknologi yang dikembangkan untuk proyek lain, selama tidak mengungkapkan data milik PIHAK PERTAMA.
+
+PASAL 6 - JAMINAN DAN GARANSI
+6.1 PIHAK KEDUA menjamin sistem yang dikembangkan dapat beroperasi dengan uptime minimal 99.5%.
+6.2 PIHAK KEDUA memberikan garansi pemeliharaan selama 6 (enam) bulan setelah serah terima.
+6.3 Perbaikan bug akan diselesaikan dalam waktu maksimal 48 jam sejak pelaporan.
+
+PASAL 7 - PEMBATALAN
+7.1 Para Pihak dapat membatalkan perjanjian ini dengan pemberitahuan tertulis 30 (tiga puluh) hari sebelumnya.
+7.2 Pembatalan sepihak tanpa alasan yang sah dikenakan penalti sebesar 25% dari total nilai kontrak yang belum dibayarkan.
+
+PASAL 8 - PENYELESAIAN SENGKETA
+8.1 Setiap sengketa akan diselesaikan terlebih dahulu secara musyawarah untuk mufakat.
+8.2 Jika musyawarah tidak menghasilkan kesepakatan, sengketa akan diselesaikan di Pengadilan Negeri Jakarta Selatan.
+
+PASAL 9 - LAIN-LAIN
+9.1 Perjanjian ini merupakan kesepakatan lengkap antara Para Pihak dan menggantikan semua perjanjian sebelumnya.
+9.2 Setiap perubahan terhadap perjanjian ini harus dibuat secara tertulis dan ditandatangani oleh kedua belah pihak.
+
+Dibuat dalam 2 (dua) rangkap asli, masing-masing mempunyai kekuatan hukum yang sama.
+
+PIHAK PERTAMA                    PIHAK KEDUA
+PT Teknologi Maju Indonesia      PT Digital Solusi Nusantara
+
+
+_________________                 _________________
+Budi Santoso                     Ani Wijaya
+Direktur                         Direktur
