@@ -4,6 +4,7 @@ address = "0.0.0.0"
 port = 8501
 enableCORS = false
 enableXsrfProtection = false
+fileWatcherType = "none"
 
 [theme]
 base = "dark"
