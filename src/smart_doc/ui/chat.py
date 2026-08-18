@@ -5,7 +5,7 @@ from smart_doc.core.rag import build_rag_chain, invoke_rag
 from smart_doc.core.prompts import SYSTEM_PROMPT_DEFAULT
 
 
-def render_chat_tab(vectorstore, llm, retriever_k: int, uploaded_files):
+def render_chat_tab(vectorstore, llm, retriever_k: int, uploaded_files, pipeline=None):
     """Render the chat Q&A tab.
 
     Args:
@@ -13,6 +13,7 @@ def render_chat_tab(vectorstore, llm, retriever_k: int, uploaded_files):
         llm: Language model instance.
         retriever_k: Number of chunks to retrieve.
         uploaded_files: List of uploaded file objects.
+        pipeline: Optional RAGPipeline for advanced retrieval.
     """
     # Reset chat when files change
     file_names = tuple(sorted([f.name for f in uploaded_files]))
@@ -35,18 +36,45 @@ def render_chat_tab(vectorstore, llm, retriever_k: int, uploaded_files):
             st.markdown(prompt)
 
         with st.chat_message("assistant"):
-            with st.spinner("Mencari jawaban..."):
+            with st.spinner("Rewrite query -> Hybrid search -> Rerank -> Generate..."):
                 try:
-                    rag_chain = build_rag_chain(vectorstore, llm, retriever_k, SYSTEM_PROMPT_DEFAULT)
-                    response = invoke_rag(rag_chain, prompt)
-                    answer = response["answer"]
+                    if pipeline:
+                        # Use advanced pipeline
+                        chat_history = st.session_state.messages[:-1]  # Exclude current msg
+                        result = pipeline.query(
+                            prompt,
+                            chat_history=chat_history,
+                            system_prompt=SYSTEM_PROMPT_DEFAULT,
+                        )
+                        answer = result["answer"]
+                        context_docs = result["context"]
+                        pipeline_info = result.get("pipeline_info", {})
+                    else:
+                        # Fallback to basic RAG
+                        rag_chain = build_rag_chain(vectorstore, llm, retriever_k, SYSTEM_PROMPT_DEFAULT)
+                        response = invoke_rag(rag_chain, prompt)
+                        answer = response["answer"]
+                        context_docs = response["context"]
+                        pipeline_info = {}
 
                     st.markdown(answer)
                     st.session_state.messages.append({"role": "assistant", "content": answer})
 
+                    # Show pipeline info
+                    if pipeline_info:
+                        with st.expander("Pipeline Info"):
+                            if "rewritten_query" in pipeline_info:
+                                st.markdown(f"**Rewritten Query:** {pipeline_info['rewritten_query']}")
+                            if "retrieved_count" in pipeline_info:
+                                st.markdown(f"**Retrieved:** {pipeline_info['retrieved_count']} docs")
+                            if "reranked_count" in pipeline_info:
+                                st.markdown(f"**After Rerank:** {pipeline_info['reranked_count']} docs")
+                            if "context_count" in pipeline_info:
+                                st.markdown(f"**Final Context:** {pipeline_info['context_count']} docs")
+
                     # Show sources
                     with st.expander("Sumber Konteks"):
-                        for i, doc in enumerate(response["context"], 1):
+                        for i, doc in enumerate(context_docs, 1):
                             page = doc.metadata.get("page", "N/A")
                             source = doc.metadata.get("source", "Unknown")
                             st.markdown(f"**Potongan {i}** -- Halaman: {page} | Sumber: `{source}`")
