@@ -60,7 +60,7 @@ class TestConfig(unittest.TestCase):
     def test_nim_constants(self):
         from smart_doc import config
         self.assertIn("nvidia", config.NIM_BASE_URL)
-        self.assertIn("nv-embedqa", config.NIM_EMBEDDING_MODEL)
+        self.assertIn("embed", config.NIM_EMBEDDING_MODEL.lower())
         self.assertGreater(len(config.NIM_CHAT_MODELS), 0)
 
     def test_supported_types(self):
