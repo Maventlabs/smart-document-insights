@@ -17,7 +17,7 @@ from datetime import datetime
 
 from smart_doc.core.pipeline import RAGPipeline
 from smart_doc.core.rag import build_llm
-from smart_doc.core.document import load_documents, get_doc_stats
+from smart_doc.core.document import get_doc_stats
 from smart_doc.core.prompts import SYSTEM_PROMPT_DEFAULT, SYSTEM_PROMPT_SUMMARY, SYSTEM_PROMPT_INSIGHTS
 from smart_doc.utils.file import save_uploaded_file, cleanup_file, validate_file_types
 from smart_doc.utils.export import export_chat_to_markdown
@@ -324,9 +324,14 @@ def main():
         for fp in file_paths:
             cleanup_file(fp)
 
-    # Document Stats
-    raw_docs = load_documents(file_paths if file_paths else [])
-    doc_stats = get_doc_stats(raw_docs)
+    # Document Stats — use metadata from pipeline (files are deleted by now)
+    if doc_metadata_list:
+        total_pages = sum(m.page_count for m in doc_metadata_list)
+        total_words = sum(m.total_words for m in doc_metadata_list)
+        total_chars = sum(m.total_chars for m in doc_metadata_list)
+        doc_stats = {"pages": total_pages, "words": total_words, "chars": total_chars}
+    else:
+        doc_stats = {"pages": 0, "words": 0, "chars": 0}
     render_document_stats(doc_stats, len(chunks))
 
     st.divider()
