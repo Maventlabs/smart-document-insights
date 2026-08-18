@@ -1,144 +1,160 @@
+"""Smart Document Insights - Entry Point.
+
+Run with: streamlit run app.py
+"""
+
+import sys
 import os
-import tempfile
+
+# Ensure src/ is on the Python path so imports work
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+
 import streamlit as st
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores import Chroma
-from langchain_openai import ChatOpenAI
-from langchain.chains import create_retrieval_chain
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain_core.prompts import ChatPromptTemplate
+from datetime import datetime
 
-@st.cache_resource
-def process_document(uploaded_file, openai_api_key):
-    # Simpan file sementara untuk PyPDFLoader
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
-        tmp_file.write(uploaded_file.getvalue())
-        tmp_file_path = tmp_file.name
+from smart_doc.core.embeddings import process_documents
+from smart_doc.core.rag import build_llm
+from smart_doc.utils.file import save_uploaded_file, cleanup_file, validate_file_types
+from smart_doc.utils.export import export_chat_to_markdown, export_to_markdown
+from smart_doc.ui.sidebar import render_sidebar
+from smart_doc.ui.stats import render_document_stats
+from smart_doc.ui.chat import render_chat_tab
+from smart_doc.ui.summary import render_summary_tab
+from smart_doc.ui.insights import render_insights_tab
+from smart_doc.core.document import get_doc_stats
+from smart_doc.config import SUPPORTED_FILE_TYPES
 
-    try:
-        # 1. Load document
-        loader = PyPDFLoader(tmp_file_path)
-        documents = loader.load()
-
-        # 2. Split document menjadi chunks
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000,
-            chunk_overlap=200,
-            length_function=len
-        )
-        chunks = text_splitter.split_documents(documents)
-
-        # 3. Buat embeddings dan simpan ke Chroma vector store
-        embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
-        vectorstore = Chroma.from_documents(
-            documents=chunks, 
-            embedding=embeddings,
-            persist_directory=None # In-memory untuk saat ini
-        )
-        return vectorstore
-    finally:
-        # Bersihkan file sementara
-        if os.path.exists(tmp_file_path):
-            os.remove(tmp_file_path)
 
 def main():
-    st.set_page_config(page_title="Smart Document Insights", page_icon="📄", layout="wide")
-    st.title("Smart Document Insights 📄")
-    st.markdown("Alat berbasis AI yang mampu memahami dokumen berukuran besar atau kompleks, seperti kontrak hukum, makalah penelitian, dan laporan keuangan.")
+    st.set_page_config(
+        page_title="Smart Document Insights",
+        page_icon="📄",
+        layout="wide",
+        initial_sidebar_state="expanded",
+    )
 
-    # Sidebar for configuration
-    with st.sidebar:
-        st.header("Konfigurasi")
-        openai_api_key = st.text_input("OpenAI API Key", type="password")
-        st.markdown("[Dapatkan OpenAI API key di sini](https://platform.openai.com/account/api-keys)")
-        
-        st.header("Unggah Dokumen")
-        uploaded_file = st.file_uploader("Upload PDF Anda", type="pdf")
-        
-    if not openai_api_key:
-        st.warning("Silakan masukkan OpenAI API Key di bilah samping untuk melanjutkan.")
+    # Custom CSS
+    st.markdown(
+        """
+        <style>
+        .stApp { max-width: 100%; }
+        .block-container { padding-top: 1rem; padding-bottom: 1rem; }
+        div[data-testid="stMetric"] {
+            background-color: #f0f2f6;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+        }
+        div[data-testid="stMetric"] label { font-size: 0.85rem !important; }
+        div[data-testid="stChatMessage"] {
+            border-radius: 0.75rem;
+            padding: 0.5rem 1rem;
+            margin-bottom: 0.5rem;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Header
+    st.title("Smart Document Insights")
+    st.markdown(
+        "**Alat berbasis AI** yang memahami dokumen kompleks -- kontrak hukum, makalah penelitian, "
+        "laporan keuangan, dan lainnya. Upload -> Tanya -> Dapatkan Jawaban.\n"
+        "*Didukung oleh [NVIDIA NIM](https://build.nvidia.com) -- 100+ model AI gratis.*"
+    )
+
+    # Sidebar
+    cfg = render_sidebar()
+
+    nim_api_key = cfg["nim_api_key"]
+    model_choice = cfg["model_choice"]
+    temperature = cfg["temperature"]
+    uploaded_files = cfg["uploaded_files"]
+    chunk_size = cfg["chunk_size"]
+    chunk_overlap = cfg["chunk_overlap"]
+    retriever_k = cfg["retriever_k"]
+
+    # Validation: API Key
+    if not nim_api_key:
+        st.warning("Silakan masukkan **NVIDIA NIM API Key** di bilah samping untuk melanjutkan. (Gratis!)")
         st.stop()
-        
-    if not uploaded_file:
-        st.info("Silakan unggah dokumen PDF di bilah samping untuk dianalisis.")
+
+    # Validation: Files
+    if not uploaded_files:
+        st.info("Silakan **unggah dokumen** (PDF/TXT/DOCX) di bilah samping untuk dianalisis.")
         st.stop()
-        
-    with st.spinner("Memproses dokumen dan membuat vector database..."):
-        try:
-            vectorstore = process_document(uploaded_file, openai_api_key)
-            st.success("Dokumen berhasil diproses dan dimuat ke dalam Vector Database!")
-        except Exception as e:
-            st.error(f"Terjadi kesalahan saat memproses dokumen: {e}")
-            st.stop()
 
-    # Chat interface
-    st.header("Ajukan Pertanyaan")
-    
-    # Inisialisasi chat history
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
+    # Validate file types
+    invalid_files = validate_file_types(uploaded_files, SUPPORTED_FILE_TYPES)
+    if invalid_files:
+        names = ", ".join([f.name for f in invalid_files])
+        st.error(f"File tidak didukung: {names}. Format yang didukung: {', '.join(SUPPORTED_FILE_TYPES)}")
+        st.stop()
 
-    # Tampilkan chat history
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+    # Process documents
+    file_paths = []
+    try:
+        for uf in uploaded_files:
+            file_paths.append(save_uploaded_file(uf))
 
-    # Input pertanyaan dari user
-    if prompt := st.chat_input("Apa yang ingin Anda ketahui dari dokumen ini?"):
-        # Tambahkan pertanyaan user ke history
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
+        with st.spinner("Memproses dokumen dan membuat vector database..."):
+            try:
+                vectorstore, raw_documents, chunks = process_documents(
+                    tuple(file_paths),
+                    chunk_size,
+                    chunk_overlap,
+                    nim_api_key,
+                )
+                st.success(f"Berhasil memproses **{len(uploaded_files)} file** -> **{len(chunks)} chunks**")
+            except Exception as e:
+                st.error(f"Gagal memproses dokumen: {e}")
+                st.stop()
+    finally:
+        for fp in file_paths:
+            cleanup_file(fp)
 
-        with st.chat_message("assistant"):
-            with st.spinner("Mencari jawaban..."):
-                try:
-                    # Setup LLM
-                    llm = ChatOpenAI(
-                        model="gpt-3.5-turbo",
-                        temperature=0,
-                        openai_api_key=openai_api_key
-                    )
+    # Document Stats
+    doc_stats = get_doc_stats(raw_documents)
+    st.subheader("Statistik Dokumen")
+    render_document_stats(doc_stats, len(chunks))
 
-                    # Setup Prompt
-                    system_prompt = (
-                        "Anda adalah asisten AI yang ahli dalam menganalisis dokumen kompleks seperti kontrak, "
-                        "makalah, dan laporan keuangan.\n"
-                        "Gunakan potongan konteks berikut untuk menjawab pertanyaan.\n"
-                        "Jika Anda tidak tahu jawabannya, katakan saja bahwa Anda tidak tahu berdasarkan dokumen ini.\n"
-                        "Berikan jawaban yang komprehensif, terstruktur, dan mudah dipahami.\n\n"
-                        "Konteks: {context}"
-                    )
-                    prompt_template = ChatPromptTemplate.from_messages([
-                        ("system", system_prompt),
-                        ("human", "{input}"),
-                    ])
+    # File list
+    with st.expander("File yang diunggah"):
+        for i, uf in enumerate(uploaded_files, 1):
+            file_size = uf.size / 1024
+            st.markdown(f"{i}. **{uf.name}** ({file_size:.1f} KB)")
 
-                    # Setup Retrieval Chain
-                    retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
-                    question_answer_chain = create_stuff_documents_chain(llm, prompt_template)
-                    rag_chain = create_retrieval_chain(retriever, question_answer_chain)
+    st.divider()
 
-                    # Generate jawaban
-                    response = rag_chain.invoke({"input": prompt})
-                    answer = response["answer"]
-                    
-                    st.markdown(answer)
-                    
-                    # Tambahkan jawaban assistant ke history
-                    st.session_state.messages.append({"role": "assistant", "content": answer})
-                    
-                    # Tampilkan sumber dokumen yang relevan (opsional, bisa di-expand)
-                    with st.expander("Lihat Sumber Konteks"):
-                        for i, doc in enumerate(response["context"]):
-                            st.markdown(f"**Potongan {i+1}** (Halaman {doc.metadata.get('page', 'Unknown')}):")
-                            st.text(doc.page_content)
-                            st.markdown("---")
+    # Tabs
+    tab_chat, tab_summary, tab_insights = st.tabs([
+        "Tanya Jawab",
+        "Ringkasan Dokumen",
+        "Key Insights",
+    ])
 
-                except Exception as e:
-                    st.error(f"Terjadi kesalahan saat menghasilkan jawaban: {e}")
+    # Build LLM
+    llm = build_llm(model_choice, temperature, nim_api_key)
 
-if __name__ == '__main__':
+    with tab_chat:
+        render_chat_tab(vectorstore, llm, retriever_k, uploaded_files)
+
+        # Export chat
+        if st.session_state.get("messages"):
+            md = export_chat_to_markdown(st.session_state.messages)
+            st.download_button(
+                label="Export Chat History",
+                data=md,
+                file_name=f"chat_history_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md",
+                mime="text/markdown",
+            )
+
+    with tab_summary:
+        render_summary_tab(vectorstore, llm, retriever_k)
+
+    with tab_insights:
+        render_insights_tab(vectorstore, llm, retriever_k)
+
+
+if __name__ == "__main__":
     main()
