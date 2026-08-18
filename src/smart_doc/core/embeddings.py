@@ -14,6 +14,39 @@ from smart_doc.config import (
 )
 
 
+def create_embeddings(api_key: str) -> NVIDIAEmbeddings:
+    """Create NVIDIA embeddings instance.
+
+    Args:
+        api_key: NVIDIA NIM API key.
+
+    Returns:
+        Configured NVIDIAEmbeddings instance.
+    """
+    return NVIDIAEmbeddings(
+        model=NIM_EMBEDDING_MODEL,
+        base_url=NIM_BASE_URL,
+        api_key=api_key,
+    )
+
+
+def create_vectorstore(chunks: list, embeddings: NVIDIAEmbeddings) -> Chroma:
+    """Create Chroma vector store from document chunks.
+
+    Args:
+        chunks: List of Document chunks.
+        embeddings: Embeddings instance.
+
+    Returns:
+        Chroma vector store.
+    """
+    return Chroma.from_documents(
+        documents=chunks,
+        embedding=embeddings,
+        persist_directory=None,  # In-memory
+    )
+
+
 @st.cache_resource(show_spinner=False)
 def process_documents(
     _file_paths: tuple,
