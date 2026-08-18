@@ -12,7 +12,7 @@ from smart_doc.core.pipeline import RAGPipeline
 from smart_doc.core.document_parser import parse_document, DocumentMetadata
 from smart_doc.core.chunker import semantic_chunk
 from smart_doc.core.retriever import HybridRetriever
-from smart_doc.core.reranker import CrossEncoderReranker, SimpleReranker
+from smart_doc.core.reranker import BM25Reranker
 from smart_doc.core.query_rewriter import rewrite_query, expand_query
 
 __all__ = [
@@ -32,8 +32,7 @@ __all__ = [
     "DocumentMetadata",
     "semantic_chunk",
     "HybridRetriever",
-    "CrossEncoderReranker",
-    "SimpleReranker",
+    "BM25Reranker",
     "rewrite_query",
     "expand_query",
 ]

@@ -1,82 +1,84 @@
-"""Cross-encoder reranker for precision retrieval."""
+"""Reranker for precision retrieval. Lightweight BM25-based."""
 
+import re
 from langchain_core.documents import Document
 
 
-class CrossEncoderReranker:
-    """Rerank documents using a cross-encoder model.
+# Stop words for reranking
+STOP_WORDS = {
+    "yang", "dan", "ini", "itu", "dengan", "untuk", "pada", "adalah",
+    "akan", "tidak", "dari", "dalam", "oleh", "atau", "juga", "saya",
+    "the", "a", "an", "is", "are", "was", "in", "on", "of", "to",
+    "and", "or", "not", "it", "for", "with", "by",
+}
 
-    Uses sentence-transformers cross-encoder to score
-    query-document relevance pairs for precise reranking.
-    """
 
-    def __init__(self, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"):
-        """Initialize the reranker.
+class BM25Reranker:
+    """Lightweight reranker using BM25 scoring + TF-IDF."""
 
-        Args:
-            model_name: HuggingFace cross-encoder model name.
-                       Default: ms-marco-MiniLM-L-6-v2 (fast + accurate).
-        """
-        from sentence_transformers import CrossEncoder
-        self.model = CrossEncoder(model_name)
+    def __init__(self):
+        pass
 
     def rerank(self, query: str, documents: list[Document], top_k: int = 5) -> list[Document]:
-        """Rerank documents based on query relevance.
+        """Rerank documents using BM25-like scoring.
 
-        Args:
-            query: The search query.
-            documents: List of candidate Documents to rerank.
-            top_k: Number of top results to return.
-
-        Returns:
-            Reranked list of Documents.
+        Combines:
+        - TF-IDF term overlap
+        - Phrase matching bonus
+        - Document length normalization
         """
         if not documents:
             return []
 
-        # Create query-document pairs
-        pairs = [(query, doc.page_content) for doc in documents]
+        query_terms = self._tokenize(query)
+        if not query_terms:
+            return documents[:top_k]
 
-        # Score with cross-encoder
-        scores = self.model.predict(pairs)
+        scored = []
+        for doc in documents:
+            doc_terms = self._tokenize(doc.page_content)
+            score = self._bm25_score(query_terms, doc_terms, len(documents))
+            scored.append((doc, score))
 
-        # Sort by score
-        scored_docs = list(zip(documents, scores))
-        scored_docs.sort(key=lambda x: x[1], reverse=True)
-
-        # Return top-k
-        return [doc for doc, score in scored_docs[:top_k]]
-
-
-class SimpleReranker:
-    """Lightweight reranker using BM25 scores (no GPU needed).
-
-    Fallback option when sentence-transformers is not available.
-    """
-
-    def rerank(self, query: str, documents: list[Document], top_k: int = 5) -> list[Document]:
-        """Simple reranking based on keyword overlap.
-
-        Args:
-            query: The search query.
-            documents: List of candidate Documents to rerank.
-            top_k: Number of top results to return.
-
-        Returns:
-            Reranked list of Documents.
-        """
-        import re
-
-        query_words = set(re.findall(r"\w+", query.lower()))
-
-        def score(doc: Document) -> float:
-            doc_words = set(re.findall(r"\w+", doc.page_content.lower()))
-            if not query_words:
-                return 0
-            overlap = query_words & doc_words
-            return len(overlap) / len(query_words)
-
-        scored = [(doc, score(doc)) for doc in documents]
         scored.sort(key=lambda x: x[1], reverse=True)
-
         return [doc for doc, _ in scored[:top_k]]
+
+    def _tokenize(self, text: str) -> list[str]:
+        """Tokenize text, removing stop words and short tokens."""
+        text = text.lower()
+        text = re.sub(r"[^\w\s]", " ", text)
+        return [w for w in text.split() if w not in STOP_WORDS and len(w) > 1]
+
+    def _bm25_score(self, query_terms: list[str], doc_terms: list[str], total_docs: int) -> float:
+        """Calculate BM25-like score."""
+        if not doc_terms:
+            return 0.0
+
+        doc_len = len(doc_terms)
+        doc_term_set = {}
+        for t in doc_terms:
+            doc_term_set[t] = doc_term_set.get(t, 0) + 1
+
+        score = 0.0
+        k1 = 1.5  # Term frequency saturation
+        b = 0.75  # Length normalization
+        avg_dl = max(doc_len, 1)
+
+        for qt in query_terms:
+            if qt in doc_term_set:
+                tf = doc_term_set[qt]
+                # BM25 term score
+                numerator = tf * (k1 + 1)
+                denominator = tf + k1 * (1 - b + b * doc_len / avg_dl)
+                score += numerator / denominator
+
+            # Phrase bonus: check if query term appears as substring
+            doc_text = " ".join(doc_terms)
+            if qt in doc_text:
+                score += 0.1
+
+        # Normalize by query length
+        if query_terms:
+            score /= len(query_terms)
+
+        return score

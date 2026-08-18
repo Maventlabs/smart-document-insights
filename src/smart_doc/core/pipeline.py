@@ -13,7 +13,7 @@ from smart_doc.core.document_parser import parse_document, DocumentMetadata
 from smart_doc.core.chunker import semantic_chunk
 from smart_doc.core.embeddings import create_embeddings, create_vectorstore
 from smart_doc.core.retriever import HybridRetriever
-from smart_doc.core.reranker import CrossEncoderReranker, SimpleReranker
+from smart_doc.core.reranker import BM25Reranker
 from smart_doc.core.query_rewriter import rewrite_query, expand_query
 from smart_doc.core.rag import build_llm, build_rag_chain, invoke_rag
 from smart_doc.core.prompts import SYSTEM_PROMPT_DEFAULT
@@ -69,14 +69,8 @@ class RAGPipeline:
         self._llm = None
         self._doc_metadata = None
 
-        # Initialize reranker
-        if use_cross_encoder:
-            try:
-                self._reranker = CrossEncoderReranker()
-            except Exception:
-                self._reranker = SimpleReranker()
-        else:
-            self._reranker = SimpleReranker()
+        # Initialize reranker (lightweight BM25-based)
+        self._reranker = BM25Reranker()
 
     @st.cache_resource(show_spinner=False)
     def _build_vectorstore(_self, _file_paths: tuple):
