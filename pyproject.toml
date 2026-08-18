@@ -1,5 +1,5 @@
 [project]
-name = "smart-document-insights"
+name = "maventrag"
 version = "2.0.0"
 description = "AI-powered document analysis using RAG with NVIDIA NIM"
 readme = "README.md"

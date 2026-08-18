@@ -13,7 +13,7 @@ def export_chat_to_markdown(messages: list) -> str:
         Formatted Markdown string.
     """
     lines = [
-        "# Chat History - Smart Document Insights",
+        "# Chat History - Maventrag",
         f"_Diekspor pada: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}_\n",
         "---\n",
     ]

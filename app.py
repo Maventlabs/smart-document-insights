@@ -1,4 +1,4 @@
-"""Smart Document Insights - Entry Point.
+"""Maventrag - Entry Point.
 
 Advanced RAG pipeline:
   PDF -> Parse -> Structure -> Metadata -> Chunk -> Embed -> Index
@@ -31,7 +31,6 @@ def inject_dark_theme():
     st.markdown(
         """
         <style>
-        /* ── Base Dark Theme ────────────────────────────────────────── */
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap');
 
         :root {
@@ -43,18 +42,13 @@ def inject_dark_theme():
             --text-secondary: #8b949e;
             --accent: #58a6ff;
             --accent-dim: #1f6feb;
-            --green: #3fb950;
-            --red: #f85149;
-            --yellow: #d29922;
         }
 
-        /* App background */
         .stApp, [data-testid="stAppViewContainer"], .main .block-container {
             background-color: var(--bg-primary) !important;
             color: var(--text-primary) !important;
         }
 
-        /* Sidebar dark panel */
         section[data-testid="stSidebar"],
         section[data-testid="stSidebar"] > div {
             background-color: var(--bg-secondary) !important;
@@ -74,18 +68,15 @@ def inject_dark_theme():
             color: var(--text-primary) !important;
         }
 
-        /* Headers */
         h1, h2, h3, h4, h5, h6 {
             color: var(--text-primary) !important;
             font-family: 'Inter', sans-serif !important;
         }
 
-        /* Body text */
         p, li, span, label, div {
             color: var(--text-primary) !important;
         }
 
-        /* Inputs */
         .stTextInput > div > div > input,
         .stTextArea > div > div > textarea,
         .stSelectbox > div > div > div,
@@ -96,12 +87,10 @@ def inject_dark_theme():
             border-radius: 6px !important;
         }
 
-        /* Sliders */
         .stSlider > div > div > div > div {
             background-color: var(--accent) !important;
         }
 
-        /* Buttons */
         .stButton > button {
             background-color: var(--accent-dim) !important;
             color: #fff !important;
@@ -109,13 +98,11 @@ def inject_dark_theme():
             border-radius: 6px !important;
             font-family: 'Inter', sans-serif !important;
             font-weight: 500 !important;
-            transition: background 0.15s ease !important;
         }
         .stButton > button:hover {
             background-color: var(--accent) !important;
         }
 
-        /* Download button */
         .stDownloadButton > button {
             background-color: transparent !important;
             color: var(--accent) !important;
@@ -126,17 +113,12 @@ def inject_dark_theme():
             background-color: var(--bg-tertiary) !important;
         }
 
-        /* File uploader */
         [data-testid="stFileUploader"] {
             border: 2px dashed var(--border) !important;
             border-radius: 8px !important;
             padding: 1rem !important;
         }
-        [data-testid="stFileUploader"] label {
-            color: var(--text-secondary) !important;
-        }
 
-        /* Metrics */
         div[data-testid="stMetric"] {
             background-color: var(--bg-secondary) !important;
             border: 1px solid var(--border) !important;
@@ -151,7 +133,6 @@ def inject_dark_theme():
             color: var(--text-primary) !important;
         }
 
-        /* Chat messages */
         div[data-testid="stChatMessage"] {
             background-color: var(--bg-secondary) !important;
             border: 1px solid var(--border) !important;
@@ -160,7 +141,6 @@ def inject_dark_theme():
             margin-bottom: 0.75rem !important;
         }
 
-        /* Tabs */
         .stTabs [data-baseweb="tab-list"] {
             background-color: var(--bg-secondary) !important;
             border-radius: 8px !important;
@@ -180,7 +160,6 @@ def inject_dark_theme():
             color: var(--text-primary) !important;
         }
 
-        /* Expander */
         .streamlit-expanderHeader {
             background-color: var(--bg-secondary) !important;
             border: 1px solid var(--border) !important;
@@ -188,35 +167,17 @@ def inject_dark_theme():
             color: var(--text-secondary) !important;
         }
 
-        /* Dividers */
-        hr {
-            border-color: var(--border) !important;
-        }
+        hr { border-color: var(--border) !important; }
 
-        /* Status messages */
-        .stAlert > div {
-            border-radius: 6px !important;
-        }
-
-        /* Chat input */
-        .stChatInput > div {
-            background-color: var(--bg-secondary) !important;
-            border: 1px solid var(--border) !important;
-            border-radius: 8px !important;
-        }
-
-        /* Hide Streamlit branding */
         #MainMenu { visibility: hidden; }
         footer { visibility: hidden; }
         header { visibility: hidden; }
 
-        /* Code blocks */
         code {
             font-family: 'JetBrains Mono', monospace !important;
             background-color: var(--bg-tertiary) !important;
             padding: 2px 6px !important;
             border-radius: 4px !important;
-            font-size: 0.85em !important;
         }
         pre {
             background-color: var(--bg-tertiary) !important;
@@ -236,7 +197,7 @@ def inject_dark_theme():
 
 def main():
     st.set_page_config(
-        page_title="Smart Document Insights",
+        page_title="Maventrag",
         page_icon="\u25b3",
         layout="wide",
         initial_sidebar_state="expanded",
@@ -244,12 +205,11 @@ def main():
 
     inject_dark_theme()
 
-    # Minimal header
     st.markdown(
         """
         <div style="margin-bottom: 0.5rem;">
             <h1 style="margin:0; font-size:1.5rem; letter-spacing:-0.02em;">
-                <span style="color:#58a6ff;">\u25b3</span> Smart Document Insights
+                <span style="color:#58a6ff;">\u25b3</span> Maventrag
             </h1>
             <p style="color:#8b949e; margin:0.25rem 0 0 0; font-size:0.875rem;">
                 Hybrid RAG. Vector + BM25 + Reranker. Powered by NVIDIA NIM.
@@ -270,17 +230,15 @@ def main():
     chunk_overlap = cfg["chunk_overlap"]
     retriever_k = cfg["retriever_k"]
 
-    # Validation: API Key
+    # Validation
     if not nim_api_key:
         st.warning("Masukkan NVIDIA NIM API Key di sidebar. Gratis di build.nvidia.com")
         st.stop()
 
-    # Validation: Files
     if not uploaded_files:
         st.info("Upload dokumen di sidebar untuk mulai.")
         st.stop()
 
-    # Validate file types
     invalid_files = validate_file_types(uploaded_files, SUPPORTED_FILE_TYPES)
     if invalid_files:
         names = ", ".join([f.name for f in invalid_files])
@@ -289,13 +247,15 @@ def main():
 
     # Process documents
     file_paths = []
+    vectorstore = None
     pipeline = None
     chunks = []
     doc_metadata_list = []
-    try:
-        for uf in uploaded_files:
-            file_paths.append(save_uploaded_file(uf))
 
+    for uf in uploaded_files:
+        file_paths.append(save_uploaded_file(uf))
+
+    try:
         with st.spinner("Parse -> Structure -> Chunk -> Embed -> Index..."):
             try:
                 pipeline = RAGPipeline(
@@ -309,7 +269,6 @@ def main():
                 vectorstore, chunks, doc_metadata_list = pipeline.process_documents(file_paths)
                 st.success(f"{len(chunks)} chunks dari {len(uploaded_files)} file")
 
-                # Compact pipeline info
                 with st.expander("Dokumen & Pipeline"):
                     for meta in doc_metadata_list:
                         fname = os.path.basename(meta.source)
@@ -324,7 +283,11 @@ def main():
         for fp in file_paths:
             cleanup_file(fp)
 
-    # Document Stats — use metadata from pipeline (files are deleted by now)
+    # Guard: if pipeline failed, stop here
+    if vectorstore is None:
+        st.stop()
+
+    # Document Stats
     if doc_metadata_list:
         total_pages = sum(m.page_count for m in doc_metadata_list)
         total_words = sum(m.total_words for m in doc_metadata_list)

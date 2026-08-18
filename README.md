@@ -1,5 +1,5 @@
 <p align="center">
-  <h1 align="center">Smart Document Insights</h1>
+  <h1 align="center">Maventrag</h1>
   <p align="center">
     <em>Advanced RAG pipeline untuk analisis dokumen kompleks.</em>
   </p>
