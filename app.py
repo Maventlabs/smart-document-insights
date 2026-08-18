@@ -251,41 +251,47 @@ def main():
     pipeline = None
     chunks = []
     doc_metadata_list = []
+    pipeline_error = None
 
     for uf in uploaded_files:
         file_paths.append(save_uploaded_file(uf))
 
-    try:
-        with st.spinner("Parse -> Structure -> Chunk -> Embed -> Index..."):
-            try:
-                pipeline = RAGPipeline(
-                    nim_api_key=nim_api_key,
-                    model=model_choice,
-                    temperature=temperature,
-                    chunk_size=chunk_size,
-                    chunk_overlap=chunk_overlap,
-                    retriever_k=retriever_k,
-                )
-                vectorstore, chunks, doc_metadata_list = pipeline.process_documents(file_paths)
-                st.success(f"{len(chunks)} chunks dari {len(uploaded_files)} file")
+    with st.spinner("Parse -> Structure -> Chunk -> Embed -> Index..."):
+        try:
+            pipeline = RAGPipeline(
+                nim_api_key=nim_api_key,
+                model=model_choice,
+                temperature=temperature,
+                chunk_size=chunk_size,
+                chunk_overlap=chunk_overlap,
+                retriever_k=retriever_k,
+            )
+            vectorstore, chunks, doc_metadata_list = pipeline.process_documents(file_paths)
+        except Exception as e:
+            pipeline_error = str(e)
 
-                with st.expander("Dokumen & Pipeline"):
-                    for meta in doc_metadata_list:
-                        fname = os.path.basename(meta.source)
-                        st.markdown(
-                            f"**{fname}** -- {meta.page_count} halaman, "
-                            f"{meta.total_words:,} kata, bahasa: {meta.language}"
-                        )
-            except Exception as e:
-                st.error(f"Gagal: {e}")
-                st.stop()
-    finally:
-        for fp in file_paths:
-            cleanup_file(fp)
+    # Clean up temp files
+    for fp in file_paths:
+        cleanup_file(fp)
 
-    # Guard: if pipeline failed, stop here
-    if vectorstore is None:
+    # If pipeline failed, show error and stop
+    if pipeline_error:
+        st.error(f"Gagal: {pipeline_error}")
         st.stop()
+
+    if vectorstore is None:
+        st.error("Pipeline gagal memproses dokumen.")
+        st.stop()
+
+    st.success(f"{len(chunks)} chunks dari {len(uploaded_files)} file")
+
+    with st.expander("Dokumen & Pipeline"):
+        for meta in doc_metadata_list:
+            fname = os.path.basename(meta.source)
+            st.markdown(
+                f"**{fname}** -- {meta.page_count} halaman, "
+                f"{meta.total_words:,} kata, bahasa: {meta.language}"
+            )
 
     # Document Stats
     if doc_metadata_list:

@@ -41,7 +41,7 @@ def render_sidebar() -> dict:
         model_names = [name for name, _ in NIM_CHAT_MODELS]
         model_ids = [mid for _, mid in NIM_CHAT_MODELS]
         model_index = st.selectbox(
-            "",
+            "Model",
             options=model_names,
             index=0,
             label_visibility="collapsed",
@@ -58,7 +58,7 @@ def render_sidebar() -> dict:
             unsafe_allow_html=True,
         )
         uploaded_files = st.file_uploader(
-            "",
+            "Upload dokumen",
             type=SUPPORTED_FILE_TYPES,
             accept_multiple_files=True,
             label_visibility="collapsed",
