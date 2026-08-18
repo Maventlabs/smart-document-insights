@@ -2,7 +2,7 @@
 
 import streamlit as st
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings
+from langchain_nvidia_ai_endpoints import NVIDIAEmbeddings
 from langchain_community.vectorstores import Chroma
 
 from smart_doc.core.document import load_documents
@@ -54,8 +54,8 @@ def process_documents(
     if not chunks:
         raise ValueError("Tidak ada chunk yang dihasilkan. Pastikan dokumen memiliki konten teks.")
 
-    # Create embeddings using NVIDIA NIM
-    embeddings = OpenAIEmbeddings(
+    # Create embeddings using NVIDIA NIM (official NVIDIA embeddings class)
+    embeddings = NVIDIAEmbeddings(
         model=NIM_EMBEDDING_MODEL,
         base_url=NIM_BASE_URL,
         api_key=nim_api_key,
